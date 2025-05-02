@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <!-- Subscription Plan Form View -->
+    
+    <record id="view_subscription_plan_form" model="ir.ui.view">
+      <field name="name">elearning.subscription.plan.form</field>
+      <field name="model">elearning.subscription.plan</field>
+      <field name="arch" type="xml">
+        <form string="Subscription Plan">
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <button name="action_view_subscriptions"
+                      type="object"
+                      class="oe_stat_button"
+                      icon="fa-users">
+                <field name="subscription_count" string="Subscriptions" widget="statinfo"/>
+              </button>
+            </div>
+            <div class="oe_title">
+              <h1>
+                <field name="name" placeholder="Subscription Plan Name"/>
+              </h1>
+            </div>
+            <group>
+              <group string="Basic Information">
+                <field name="sequence"/>
+                <field name="price"/>
+                <field name="currency_id" options="{'no_create': True}"/>
+                <field name="active"/>
+              </group>
+              <group string="Duration">
+                <field name="duration_months"/>
+                <field name="duration_days"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Access Limits">
+                <group>
+                  <field name="free_preview_limit"
+                         help="Number of videos allowed in free preview mode"/>
+                  <field name="max_courses"
+                         help="Maximum number of courses allowed. 0 = unlimited"/>
+                  <field name="max_downloads"
+                         help="Maximum number of downloads allowed. 0 = unlimited"/>
+                </group>
+              </page>
+              <page string="Features">
+                <group>
+                  <field name="allow_voucher"/>
+                  <field name="allow_certification"/>
+                  <field name="allow_forum"/>
+                </group>
+              </page>
+              <page string="Courses">
+                <group>
+                  <field name="allowed_course_ids" widget="many2many_tags"/>
+                </group>
+              </page>
+              <page string="Payment">
+                <group>
+                  <field name="product_id"
+                         domain="[('type', '=', 'service')]"
+                         context="{'default_type': 'service', 'default_recurring_invoice': True}"/>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+  </data>
+</odoo>

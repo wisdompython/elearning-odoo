@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!-- Main Menu for eLearning Subscriptions -->
+        <menuitem
+            id="menu_elearning_subscription_root"
+            name="Subscriptions"
+            parent="website_slides.website_slides_menu_root"
+            sequence="20"/>
+            
+        <!-- Action for Subscription Plans -->
+        <record id="action_subscription_plans" model="ir.actions.act_window">
+            <field name="name">Subscription Plans</field>
+            <field name="res_model">elearning.subscription.plan</field>
+            <field name="view_mode">list,form</field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new subscription plan
+                </p>
+                <p>
+                    Define different subscription plans with varying features and pricing.
+                </p>
+            </field>
+        </record>
+            
+        <!-- Subscription Plans Menu -->
+        <menuitem
+            id="menu_subscription_plans"
+            name="Subscription Plans"
+            parent="menu_elearning_subscription_root"
+            action="action_subscription_plans"
+            sequence="10"/>
+            
+        <!-- Subscriptions Menu -->
+        <menuitem
+            id="menu_subscription_instances"
+            name="Subscriptions"
+            parent="menu_elearning_subscription_root"
+            action="action_elearning_subscription"
+            sequence="20"/>
+            
+        <!-- Configuration Menu -->
+        <menuitem
+            id="menu_elearning_subscription_config"
+            name="Configuration"
+            parent="menu_elearning_subscription_root"
+            sequence="100"/>
+            
+        <!-- Add subscription fields to course form -->
+        <record id="view_slide_channel_form_subscription" model="ir.ui.view">
+            <field name="name">slide.channel.form.subscription</field>
+            <field name="model">slide.channel</field>
+            <field name="inherit_id" ref="website_slides.view_slide_channel_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='options']" position="inside">
+                    <group string="Subscription Requirements">
+                        <field name="subscription_required"/>
+                        <field name="min_subscription_plan_id" 
+                               invisible="not subscription_required"
+                               required="subscription_required"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+        
+        <!-- Extension menu to add subscription toggle to website -->
+        <record id="action_subscription_settings" model="ir.actions.act_window">
+            <field name="name">Subscription Settings</field>
+            <field name="res_model">res.config.settings</field>
+            <field name="view_mode">form</field>
+            <field name="target">inline</field>
+            <field name="context">{'module': 'elearning_subscription'}</field>
+        </record>
+        
+        <menuitem
+            id="menu_subscription_settings"
+            name="Settings"
+            parent="menu_elearning_subscription_config"
+            action="action_subscription_settings"
+            sequence="100"/>
+            
+        <!-- Portal Menu -->
+        <!-- <menuitem
+            id="menu_portal_subscriptions"
+            name="My Subscriptions"
+            parent="portal.menu_portal"
+            action="action_portal_subscriptions"
+            sequence="20"/> -->
+    </data>
+</odoo>

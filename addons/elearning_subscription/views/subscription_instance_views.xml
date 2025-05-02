@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+    <!-- Tree (List) View -->
+    <record id="view_elearning_subscription_instance_tree" model="ir.ui.view">
+      <field name="name">elearning.subscription.tree</field>
+      <field name="model">elearning.subscription</field>
+      <field name="type">list</field>
+      <field name="arch" type="xml">
+        <list decoration-info="state == 'draft'"
+              decoration-muted="state == 'expired'"
+              decoration-success="state == 'active'"
+              decoration-warning="state == 'pending'">
+          <field name="name"/>
+          <field name="partner_id"/>
+          <field name="plan_id"/>
+          <field name="start_date"/>
+          <field name="end_date"/>
+          <field name="price" widget="monetary"/>
+          <field name="currency_id" invisible="1"/>
+          <field name="state"/>
+        </list>
+      </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_elearning_subscription_instance_form" model="ir.ui.view">
+      <field name="name">elearning.subscription.form</field>
+      <field name="model">elearning.subscription</field>
+      <field name="arch" type="xml">
+        <form>
+          <header>
+            <button name="action_activate" string="Activate" type="object"
+                    class="oe_highlight btn-primary"
+                    invisible="state not in ('draft', 'pending')"/>
+            <button name="action_cancel" string="Cancel" type="object"
+                    invisible="state not in ('draft', 'pending', 'active')"/>
+            <field name="state" widget="statusbar" 
+                   statusbar_visible="draft,pending,active,expired"/>
+          </header>
+          <sheet>
+            <div class="oe_button_box" name="button_box">
+              <!-- Smart buttons can be added here as needed -->
+            </div>
+            <div class="oe_title">
+              <label for="name" class="oe_edit_only"/>
+              <h1><field name="name" readonly="1"/></h1>
+            </div>
+            <group>
+              <group>
+                <field name="partner_id" widget="res_partner_many2one"/>
+                <field name="user_id" readonly="1"/>
+                <field name="plan_id"/>
+                <label for="price"/>
+                <field name="price" widget="monetary"/>
+                <field name="currency_id" options="{'no_create': True}"/>
+              </group>
+              <group>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="is_voucher_based"/>
+                <field name="voucher_code"
+                       invisible="not is_voucher_based"
+                       required="is_voucher_based"/>
+              </group>
+            </group>
+            <notebook>
+              <page string="Usage Statistics" name="usage">
+                <group col="4">
+                  <group string="Consumption" name="consumption" colspan="2">
+                    <field name="videos_consumed" widget="percentpie"/>
+                    <field name="downloads_consumed" widget="percentpie"/>
+                  </group>
+                  <group string="Access" name="access" colspan="2">
+                    <field name="courses_accessed" widget="many2many_tags" 
+                           options="{'color_field': 'color'}"/>
+                  </group>
+                </group>
+              </page>
+              <page string="Payment" name="payment"
+                    invisible="is_voucher_based">
+                <group>
+                  <group name="payment_info">
+                    <field name="payment_method_id"/>
+                    <field name="invoice_id"/>
+                  </group>
+                  <group name="payment_status">
+                    <!-- Additional payment-related fields can go here -->
+                  </group>
+                </group>
+              </page>
+            </notebook>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_elearning_subscription_instance_search" model="ir.ui.view">
+      <field name="name">elearning.subscription.search</field>
+      <field name="model">elearning.subscription</field>
+      <field name="arch" type="xml">
+        <search>
+          <field name="name"/>
+          <field name="partner_id"/>
+          <field name="plan_id"/>
+          <field name="voucher_code"/>
+          <filter string="Active" name="active" domain="[('state', '=', 'active')]"/>
+          <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+          <filter string="Pending" name="pending" domain="[('state', '=', 'pending')]"/>
+          <filter string="Expired" name="expired" domain="[('state', '=', 'expired')]"/>
+          <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+          <separator/>
+          <filter string="Voucher Based" name="voucher_based" domain="[('is_voucher_based', '=', True)]"/>
+          <group expand="0" string="Group By">
+            <filter string="Customer" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+            <filter string="Subscription Plan" name="group_by_plan" context="{'group_by': 'plan_id'}"/>
+            <filter string="Status" name="group_by_state" context="{'group_by': 'state'}"/>
+            <filter string="Start Date" name="group_by_start_date" context="{'group_by': 'start_date'}"/>
+          </group>
+        </search>
+      </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_elearning_subscription" model="ir.actions.act_window">
+      <field name="name">Subscriptions</field>
+      <field name="res_model">elearning.subscription</field>
+      <field name="view_mode">list,form</field>
+      <field name="view_id" ref="view_elearning_subscription_instance_tree"/>
+      <field name="context">{'search_default_active': 1}</field>
+      <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">
+          Create your first subscription!
+        </p>
+        <p>
+          Create subscription plans for your customers to access your e-learning content.
+        </p>
+      </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_subscription_instances" name="Subscriptions" parent="menu_elearning_subscription_root" action="action_elearning_subscription" sequence="20"/>
+
+  </data>
+</odoo>
