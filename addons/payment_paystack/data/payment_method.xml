@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_method_paystack" model="payment.method">
+        <field name="name">Paystack</field>
+        <field name="code">paystack</field>
+        <field name="payment_type">online</field>
+    </record>
+</odoo> 

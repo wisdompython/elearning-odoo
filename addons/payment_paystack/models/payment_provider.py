@@ -31,50 +31,102 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentProvider(models.Model):
-    _name = 'payment.provider'
-    _inherits = "payment.provider"
+    _inherit = 'payment.provider'
 
-    provider = fields.Selection(selection_add=[('paystack', 'Paystack')], ondelete={'paystack': 'set default'})
-    paystack_secret_key = fields.Char(string='Paystack Secret Key', required_if_provider='paystack', groups='base.group_user')
-    paystack_public_key = fields.Char(string='Paystack Public Key', required_if_provider='paystack', groups='base.group_user')
+    code = fields.Selection(
+        selection_add=[('paystack', 'Paystack')],
+        ondelete={'paystack': 'set default'}
+    )
+    paystack_secret_key = fields.Char(
+        string='Paystack Secret Key',
+        help='The secret key provided by Paystack',
+        required_if_provider='paystack',
+        groups='base.group_system'
+    )
+    paystack_public_key = fields.Char(
+        string='Paystack Public Key',
+        help='The public key provided by Paystack',
+        required_if_provider='paystack',
+        groups='base.group_system'
+    )
 
+    def _get_paystack_api_url(self):
+        """Return the API URL according to the provider state.
 
-    def _get_paystack_url(self):
-        self.ensure_one()
+        Note: self.ensure_one()
 
-        return 'https://api.paystack.co'
-    
-    def _paystack_make_request(self, endpoint, payload=None, method='POST'):
-        """Make a request to Paystack API at the specified endpoint.
-        
-        Note: Authentication to the API is performed through the Authorization header,
-        with a bearer token using your secret key.
+        :return: The API URL
+        :rtype: str
         """
         self.ensure_one()
-        url = f"{self._get_paystack_url()}/{endpoint}"
+        if self.state == 'enabled':
+            return 'https://api.paystack.co'
+        else:
+            return 'https://api.paystack.co'  # Paystack doesn't have a test API URL
+
+    def _paystack_make_request(self, endpoint, payload=None, method='POST'):
+        """Make a request to Paystack API at the specified endpoint.
+
+        Note: self.ensure_one()
+
+        :param str endpoint: The endpoint to be reached by the request
+        :param dict payload: The payload of the request
+        :param str method: The HTTP method of the request
+        :return The JSON-formatted content of the response
+        :rtype: dict
+        :raise: ValidationError if an HTTP error occurs
+        """
+        self.ensure_one()
+        url = f"{self._get_paystack_api_url()}/{endpoint.strip('/')}"
         headers = {
             'Authorization': f'Bearer {self.paystack_secret_key}',
             'Content-Type': 'application/json',
             'Cache-Control': 'no-cache',
         }
-        
+
         try:
-            if method == 'POST':
-                response = requests.post(url, headers=headers, data=json.dumps(payload) if payload else None, timeout=60)
-            elif method == 'GET':
-                response = requests.get(url, headers=headers, params=payload, timeout=60)
+            if method == 'GET':
+                response = requests.get(url, params=payload, headers=headers, timeout=60)
             else:
-                raise ValidationError(_("Method not supported"))
-                
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    data=json.dumps(payload) if payload else None,
+                    timeout=60
+                )
             response.raise_for_status()
             return response.json()
         except requests.exceptions.ConnectionError:
-            raise ValidationError(_("Could not establish the connection to Paystack."))
-        except requests.exceptions.HTTPError as e:
-            raise ValidationError(_("Paystack: %s") % e.response.text)
-        except (ValueError, requests.exceptions.Timeout) as e:
-            raise ValidationError(_("Paystack: %s") % str(e))
-    
+            _logger.error("Unable to reach endpoint at %s", url)
+            raise ValidationError("Could not establish the connection to Paystack.")
+        except requests.exceptions.HTTPError as error:
+            _logger.error("Invalid API request at %s with data %s: %s", url, payload, error.response.text)
+            raise ValidationError("Paystack: " + error.response.text)
+        except (ValueError, requests.exceptions.Timeout) as error:
+            _logger.error("Invalid API response at %s with data %s: %s", url, payload, str(error))
+            raise ValidationError("Paystack: " + str(error))
+
+    def _get_default_payment_method_id(self):
+        self.ensure_one()
+        if self.code != 'paystack':
+            return super()._get_default_payment_method_id()
+        return self.env.ref('payment_paystack.payment_method_paystack').id
+
+    def _should_build_inline_form(self, is_validation=False):
+        if self.code == 'paystack':
+            return True
+        return super()._should_build_inline_form(is_validation)
+
+    def _paystack_format_amount(self, amount, currency):
+        """Convert the amount to kobo (smallest currency unit in Nigeria).
+
+        :param float amount: The amount to convert
+        :param recordset currency: The currency of the amount
+        :return: The amount in kobo
+        :rtype: int
+        """
+        self.ensure_one()
+        return int(amount * 100)
 
     def paystack_form_generate_values(self, values):
         self.ensure_one()

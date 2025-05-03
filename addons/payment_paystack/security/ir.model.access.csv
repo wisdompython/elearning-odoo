@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_payment_paystack_payment_paystack,payment_paystack.payment_paystack,model_payment_paystack_payment_paystack,base.group_user,1,1,1,1
+access_payment_provider_paystack_user,payment.provider.paystack.user,payment.model_payment_provider,base.group_user,1,0,0,0
+access_payment_provider_paystack_system,payment.provider.paystack.system,payment.model_payment_provider,base.group_system,1,1,1,1

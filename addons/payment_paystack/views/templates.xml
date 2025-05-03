@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
 <!--
@@ -20,5 +21,89 @@
           </dl>
         </template>
 -->
+        <!-- Paystack Payment Redirect Template -->
+        <template id="paystack_redirect" name="Paystack Payment Redirect">
+            <t t-call="website.layout">
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <h3 class="card-title">Redirecting to Paystack...</h3>
+                                    <p class="card-text">Please wait while we redirect you to the payment page.</p>
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script src="https://js.paystack.co/v1/inline.js"></script>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var handler = PaystackPop.setup({
+                            key: '<t t-esc="paystack_public_key"/>',
+                            email: '<t t-esc="paystack_values.get('email')"/>',
+                            amount: '<t t-esc="paystack_values.get('amount')"/>',
+                            currency: '<t t-esc="paystack_values.get('currency')"/>',
+                            ref: '<t t-esc="paystack_values.get('reference')"/>',
+                            callback: function(response) {
+                                window.location.href = '<t t-esc="paystack_values.get('callback_url')"/>?reference=' + response.reference;
+                            },
+                            onClose: function() {
+                                window.location.href = '<t t-esc="paystack_values.get('callback_url')"/>?reference=<t t-esc="paystack_values.get('reference')"/>';
+                            }
+                        });
+                        handler.openIframe();
+                    });
+                </script>
+            </t>
+        </template>
+
+        <!-- Paystack Success Template -->
+        <template id="paystack_success" name="Paystack Payment Success">
+            <t t-call="website.layout">
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="mb-4">
+                                        <i class="fa fa-check-circle text-success" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h3 class="card-title">Payment Successful!</h3>
+                                    <p class="card-text">Your payment has been processed successfully.</p>
+                                    <p class="card-text">Reference: <t t-esc="tx.reference"/></p>
+                                    <a href="/shop/confirmation" class="btn btn-primary">Continue</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
+
+        <!-- Paystack Error Template -->
+        <template id="paystack_error" name="Paystack Payment Error">
+            <t t-call="website.layout">
+                <div class="container mt-4">
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body text-center">
+                                    <div class="mb-4">
+                                        <i class="fa fa-times-circle text-danger" style="font-size: 4rem;"></i>
+                                    </div>
+                                    <h3 class="card-title">Payment Failed</h3>
+                                    <p class="card-text"><t t-esc="error"/></p>
+                                    <a href="/shop/cart" class="btn btn-primary">Try Again</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </template>
     </data>
 </odoo>
